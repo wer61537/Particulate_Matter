@@ -1,6 +1,7 @@
-# Q5
-# How have emissions from motor vehicle sources changed from 1999–2008 in
-# Baltimore City?
+#Q2
+# Have total emissions from PM2.5 decreased in Baltimore City, Maryland from
+# 1999 to 2008?
+
 
 #remove all objects just to be safe
 rm(list = ls(all = TRUE))
@@ -32,27 +33,21 @@ if (!exists("PM25") || !exists("SCC") ){
   PM25$year <- as.factor(PM25$year)
 } 
 
+
 # Get Baltimore and LA emissions from motor vehicle sources
 str(PM25)
-emissions <-PM25[PM25$fips %in% c("24510") & (PM25$type=="ON-ROAD"), ]
+emissions <-PM25[PM25$fips %in% c("24510"), ]
 str(emissions)
 
-#sum by year and fips
-emissions.agg <- aggregate(Emissions ~ year , data=emissions, FUN=sum)
+#sum by year
+emissions.agg <- aggregate(Emissions ~ year, data=emissions, FUN=sum)
 emissions.agg$Location <- c("Baltimore City, MD")
-
 str(emissions.agg)
+emissions.agg
 
-
-# Plot
-png("plot5.png")
-p<-ggplot(emissions.agg, aes(x=factor(year), y=Emissions)) +
-  geom_bar(stat="identity") + 
-  ylab(expression("Total PM"[2.5]*" Emissions (tons)")) +
-  xlab("Year") +
-  ggtitle(expression("Total PM"[2.5]*" Motor Vehicle Emissions in Baltimore City")) +
-  theme(plot.title = element_text(  color="#666666", face="bold", size=16)) +
-  theme(axis.title = element_text( color="#666666", face="bold", size=16)) 
-print(p)
+png('plot2.png')
+barplot(height=emissions.agg$Emissions,
+        names.arg=emissions.agg$year,
+        xlab="Year", ylab=expression('Total PM'[2]*' Emissions (tons)'),
+        main=expression('Baltimore City, Maryland Total PM'[2]*' Emissions By Year'))
 dev.off()
-

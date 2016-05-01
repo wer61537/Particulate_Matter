@@ -1,6 +1,8 @@
-# Q5
-# How have emissions from motor vehicle sources changed from 1999–2008 in
-# Baltimore City?
+# Q4
+# Across the United States, how have emissions from coal combustion-related
+# sources changed from 1999 to 2008?
+
+
 
 #remove all objects just to be safe
 rm(list = ls(all = TRUE))
@@ -32,27 +34,25 @@ if (!exists("PM25") || !exists("SCC") ){
   PM25$year <- as.factor(PM25$year)
 } 
 
-# Get Baltimore and LA emissions from motor vehicle sources
-str(PM25)
-emissions <-PM25[PM25$fips %in% c("24510") & (PM25$type=="ON-ROAD"), ]
-str(emissions)
+# Find coal combustion-related sources in the SCC data
+coal <- grepl("Fuel Comb.*Coal", SCC$EI.Sector)
+coal.sources <- SCC[coal,]
 
-#sum by year and fips
-emissions.agg <- aggregate(Emissions ~ year , data=emissions, FUN=sum)
-emissions.agg$Location <- c("Baltimore City, MD")
+# Find emissions from coal combustion-related sources
+emissions <- PM25[(PM25$SCC %in% coal.sources$SCC), ]
 
-str(emissions.agg)
+# sum by year
+emissions.yearly <- aggregate(Emissions ~ year, data=emissions, FUN=sum)
 
-
-# Plot
-png("plot5.png")
-p<-ggplot(emissions.agg, aes(x=factor(year), y=Emissions)) +
-  geom_bar(stat="identity") + 
+# plot
+library(ggplot2)
+png("plot4.png")
+p<-ggplot(emissions.yearly, aes(x=factor(year), y=Emissions)) +
+  geom_bar(stat="identity") +
+  xlab("year") +
   ylab(expression("Total PM"[2.5]*" Emissions (tons)")) +
-  xlab("Year") +
-  ggtitle(expression("Total PM"[2.5]*" Motor Vehicle Emissions in Baltimore City")) +
+  ggtitle(expression("Total PM"[2.5]*" Coal Combustion Related Emissions")) +
   theme(plot.title = element_text(  color="#666666", face="bold", size=16)) +
-  theme(axis.title = element_text( color="#666666", face="bold", size=16)) 
+  theme(axis.title = element_text( color="#666666", face="bold", size=16))
 print(p)
 dev.off()
-

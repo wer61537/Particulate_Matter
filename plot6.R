@@ -1,3 +1,9 @@
+# Q6
+# Compare emissions from motor vehicle sources in Baltimore City with emissions
+# from motor vehicle sources in Los Angeles County, California (fips ==
+# "06037"). Which city has seen greater changes over time in motor vehicle
+# emissions?
+
 
 #remove all objects just to be safe
 rm(list = ls(all = TRUE))
@@ -29,17 +35,13 @@ if (!exists("PM25") || !exists("SCC") ){
   PM25$year <- as.factor(PM25$year)
 } 
 
-# Compare emissions from motor vehicle sources in Baltimore City with emissions
-# from motor vehicle sources in Los Angeles County, California (fips ==
-# "06037"). Which city has seen greater changes over time in motor vehicle
-# emissions?
-
 
 # Get Baltimore and LA emissions from motor vehicle sources
 str(PM25)
 emissions <-PM25[PM25$fips %in% c("24510", "06037") & (PM25$type=="ON-ROAD"), ]
 str(emissions)
 
+#sum by year and fips
 emissions.agg <- aggregate(Emissions ~ year +fips , data=emissions, FUN=sum)
 emissions.agg$Location <- ifelse(emissions.agg$fips =="24510",c("Baltimore City, MD"),c("Los Angeles County, CA"))
 
@@ -51,9 +53,9 @@ png("plot6.png")
 p<-ggplot(emissions.agg, aes(x=factor(year), y=Emissions, fill=Location)) +
   geom_bar(stat="identity") + 
   facet_grid(.~Location)+
-  ylab("Total Emissions (tons)") + 
+  ylab(expression("Total PM"[2.5]*" Emissions (tons)")) +
   xlab("Year") +
-  ggtitle(expression("\n\nComparison of Motor Vehicle Emissions in Baltimore and Los Angeles"))+
+  ggtitle(expression("\n\nComparison of Motor Vehicle Total PM"[2.5]*" Emissions in Baltimore and Los Angeles"))+
   theme(plot.title = element_text(  color="#666666", face="bold", size=16, hjust=0)) +
   theme(axis.title = element_text( color="#666666", face="bold", size=16)) 
 print(p)

@@ -1,6 +1,9 @@
-# Q5
-# How have emissions from motor vehicle sources changed from 1999–2008 in
-# Baltimore City?
+# Q3
+# Of the four types of sources indicated by the type (point, nonpoint, onroad,
+# nonroad) variable, which of these four sources have seen decreases in
+# emissions from 1999–2008 for Baltimore City? Which have seen increases in
+# emissions from 1999–2008?
+
 
 #remove all objects just to be safe
 rm(list = ls(all = TRUE))
@@ -32,27 +35,25 @@ if (!exists("PM25") || !exists("SCC") ){
   PM25$year <- as.factor(PM25$year)
 } 
 
-# Get Baltimore and LA emissions from motor vehicle sources
+# Get Baltimore emissions 
 str(PM25)
-emissions <-PM25[PM25$fips %in% c("24510") & (PM25$type=="ON-ROAD"), ]
+emissions <-PM25[PM25$fips %in% c("24510"), ]
 str(emissions)
 
-#sum by year and fips
-emissions.agg <- aggregate(Emissions ~ year , data=emissions, FUN=sum)
+#sum by year and type
+emissions.agg <- aggregate(Emissions ~ year + type , data=emissions, FUN=sum)
 emissions.agg$Location <- c("Baltimore City, MD")
 
 str(emissions.agg)
 
-
-# Plot
-png("plot5.png")
-p<-ggplot(emissions.agg, aes(x=factor(year), y=Emissions)) +
-  geom_bar(stat="identity") + 
+png("plot3.png", height=480, width=680)
+p<-ggplot(emissions.agg, aes(x=factor(year), y=Emissions, fill=type)) +
+  geom_bar(stat="identity") +
+  facet_grid(. ~ type) +
   ylab(expression("Total PM"[2.5]*" Emissions (tons)")) +
   xlab("Year") +
-  ggtitle(expression("Total PM"[2.5]*" Motor Vehicle Emissions in Baltimore City")) +
   theme(plot.title = element_text(  color="#666666", face="bold", size=16)) +
-  theme(axis.title = element_text( color="#666666", face="bold", size=16)) 
+  theme(axis.title = element_text( color="#666666", face="bold", size=16)) +
+  ggtitle(expression("Baltimore City PM"[2.5]*" Emissions by Source"))
 print(p)
 dev.off()
-
