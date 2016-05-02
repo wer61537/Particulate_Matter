@@ -32,27 +32,33 @@ if (!exists("PM25") || !exists("SCC") ){
   PM25$year <- as.factor(PM25$year)
 } 
 
-# Get Baltimore and LA emissions from motor vehicle sources
+# Get Baltimore from motor vehicle sources
 str(PM25)
 emissions <-PM25[PM25$fips %in% c("24510") & (PM25$type=="ON-ROAD"), ]
 str(emissions)
 
-#sum by year and fips
-emissions.agg <- aggregate(Emissions ~ year , data=emissions, FUN=sum)
-emissions.agg$Location <- c("Baltimore City, MD")
+PM25.mobile <- PM25[PM25$SCC %in% SCC[grep("Mobile", SCC$EI.Sector), 1] & PM25$fips %in% c("24510") & (PM25$type=="ON-ROAD"), ]
+PM25.mobile$Location <- "Baltimore City, MD"
+head(PM25.mobile)
 
-str(emissions.agg)
+SCC.mobile <- SCC[, c(1, 4)]
+head(SCC.mobile)
+emissions.mobile <- merge( PM25.mobile,SCC.mobile, by.x = "SCC", by.y = "SCC") 
+str(emissions.mobile)
+head(emissions.mobile)
 
+# sum by year and Sector
+emissions.agg <- aggregate(Emissions ~ year + EI.Sector, data=emissions.mobile, FUN=sum)
+head(emissions.agg)
 
-# Plot
-png("plot5.png")
-p<-ggplot(emissions.agg, aes(x=factor(year), y=Emissions)) +
-  geom_bar(stat="identity") + 
+# plot
+png("plot5.png", height=480, width=680)
+p<-ggplot(emissions.agg, aes(x=factor(year), y=Emissions, fill=EI.Sector)) +
+  geom_bar(stat="identity") +
+  xlab("year") +
   ylab(expression("Total PM"[2.5]*" Emissions (tons)")) +
-  xlab("Year") +
-  ggtitle(expression("Total PM"[2.5]*" Motor Vehicle Emissions in Baltimore City")) +
+  ggtitle(expression("Total PM"[2.5]*" Baltimore City, MD Vehicle Related Emissions")) +
   theme(plot.title = element_text(  color="#666666", face="bold", size=16)) +
-  theme(axis.title = element_text( color="#666666", face="bold", size=16)) 
+  theme(axis.title = element_text( color="#666666", face="bold", size=16))
 print(p)
 dev.off()
-

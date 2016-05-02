@@ -6,8 +6,6 @@
 #remove all objects just to be safe
 rm(list = ls(all = TRUE))
 
-#get needed library
-library(ggplot2)
 
 # Read data files
 url <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
@@ -30,20 +28,46 @@ if (!exists("PM25") || !exists("SCC") ){
   PM25 <- readRDS(fullpath1)
   SCC <- readRDS(fullpath2)
   cat("All data loaded!")
-  PM25$year <- as.factor(PM25$year)
+  PM25$fYear <- as.factor(PM25$year)
 } 
 
 str(PM25)
 
 #sum by year
 emissions.agg <- aggregate(Emissions ~ year, data=PM25, FUN=sum)
+
 str(emissions.agg)
+emissions.agg
 
+#do an lr to get a line and coefficients
+fit<-lm(Emissions ~ year, data=emissions.agg)
 
-barplot(
-  (emissions.agg$Emissions),
-  names.arg=emissions.agg$year,
-  xlab="Year",
-  ylab=expression("Total PM"[2.5]*" Emissions (tons)"),
-  main=expression("Total PM"[2.5]*" Emissions From All US Sources")
+#
+summary(fit)
+intcp <- format(coef(fit)[1],digits=4) 
+slp <-  format(coef(fit)[2],digits=4)
+Rsq <-format(summary(fit)$r.squared, digits=4)
+
+## roundcoefficients for better output
+cf <- round(coef(fit), 2) 
+
+## build equation label
+eq <- paste0("Total PM  = ", cf[1],
+             ifelse(sign(cf[2])==1, " + ", " - "), abs(cf[2]), " * Year ",
+             ifelse(sign(cf[2])==1,"\nSlope of regression is positive 20 emissions are increasing.","\nSlope of regression is negative so emissions are decreasing.")
+             )
+eq             
+
+png("plot1.png", height=480, width=680)
+plot(Emissions ~ year, data = emissions.agg, pch=2, col=topo.colors(8), xlab="Year",
+     ylab=expression("Total PM"[2.5]*" Emissions (tons)"),
+     main=expression("Total PM"[2.5]*" Emissions From All US Sources")
 )
+
+#add regression line and equation
+abline(fit,lty="dashed", col='red')
+legend("top", bty="n", eq)
+
+#test slope, if negative then decrease
+message(ifelse(sign(cf[2])==1,"Slope of regression is positive to emissions are increasing.","Slope of regression is negative to emissions are decreasing."))
+dev.off()

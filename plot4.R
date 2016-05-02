@@ -35,19 +35,18 @@ if (!exists("PM25") || !exists("SCC") ){
 } 
 
 # Find coal combustion-related sources in the SCC data
-coal <- grepl("Fuel Comb.*Coal", SCC$EI.Sector)
-coal.sources <- SCC[coal,]
+PM25.coal <- PM25[PM25$SCC %in% SCC[grep("Coal", SCC$EI.Sector), 1], ]
+SCC.coal <- SCC[, c(1, 4)]
+emissions.coal <- merge(PM25.coal, SCC.coal, by.x = "SCC", by.y = "SCC")[, c(4, 6, 7)]
+head(emissions.coal)
 
-# Find emissions from coal combustion-related sources
-emissions <- PM25[(PM25$SCC %in% coal.sources$SCC), ]
-
-# sum by year
-emissions.yearly <- aggregate(Emissions ~ year, data=emissions, FUN=sum)
+# sum by year and Sector
+emissions.agg <- aggregate(Emissions ~ year + EI.Sector, data=emissions.coal, FUN=sum)
+head(emissions.agg)
 
 # plot
-library(ggplot2)
-png("plot4.png")
-p<-ggplot(emissions.yearly, aes(x=factor(year), y=Emissions)) +
+png("plot4.png", height=480, width=680)
+p<-ggplot(emissions.agg, aes(x=factor(year), y=Emissions, fill=EI.Sector)) +
   geom_bar(stat="identity") +
   xlab("year") +
   ylab(expression("Total PM"[2.5]*" Emissions (tons)")) +
